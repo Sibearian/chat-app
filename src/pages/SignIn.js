@@ -19,8 +19,6 @@ const SignIn = () => {
 		} catch (error) {
 			Alert.info(error.message, 40000);
 		}
-
-		Alert.info("Waiting", 10000);
 	};
 
 	const onFacebookSignIn = () => {
