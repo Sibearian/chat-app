@@ -1,9 +1,9 @@
 export function getNameInitials(name) {
-	const splitNames = name.toUpperCase().split(" ");
+	const splitName = name.toUpperCase().split(" ");
 
-	if (splitNames.length > 1) {
-		return splitNames[0][0] + splitNames[1][0];
+	if (splitName.length > 1) {
+		return splitName[0][0] + splitName[1][0];
 	}
 
-	return splitNames[0][0];
+	return splitName[0][0];
 }

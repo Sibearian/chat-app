@@ -18,7 +18,7 @@ const PublicRoute = ({ children, ...routeProps }) => {
 		return <Redirect to="/" />;
 	}
 
-	return <Route {...routeProps}> {children} </Route>;
+	return <Route {...routeProps}>{children}</Route>;
 };
 
 export default PublicRoute;

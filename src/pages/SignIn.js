@@ -1,6 +1,6 @@
 import React from "react";
 import firebase from "firebase/app";
-import { Container, Grid, Row, Col, Panel, Button, Icon, Alert } from "rsuite";
+import { Container, Grid, Row, Panel, Col, Button, Icon, Alert } from "rsuite";
 import { auth, database } from "../misc/firebase";
 
 const SignIn = () => {
@@ -15,15 +15,16 @@ const SignIn = () => {
 				});
 			}
 
-			Alert.success("SIGNED IN", 40000);
-		} catch (error) {
-			Alert.info(error.message, 40000);
+			Alert.success("Signed in", 4000);
+		} catch (err) {
+			Alert.error(err.message, 4000);
 		}
 	};
 
 	const onFacebookSignIn = () => {
 		signInWithProvider(new firebase.auth.FacebookAuthProvider());
 	};
+
 	const onGoogleSignIn = () => {
 		signInWithProvider(new firebase.auth.GoogleAuthProvider());
 	};
@@ -35,15 +36,17 @@ const SignIn = () => {
 					<Col xs={24} md={12} mdOffset={6}>
 						<Panel>
 							<div className="text-center">
-								<h2>Welcome To Chat</h2>
-								<p>Progressive chat platform for messaging</p>
+								<h2>Welcome to Chat</h2>
+								<p>Progressive chat platform for neophytes</p>
 							</div>
+
 							<div className="mt-3">
 								<Button block color="blue" onClick={onFacebookSignIn}>
-									<Icon icon="facebook" /> Continue with facebook
+									<Icon icon="facebook" /> Continue with Facebook
 								</Button>
+
 								<Button block color="green" onClick={onGoogleSignIn}>
-									<Icon icon="google" /> Continue With Google
+									<Icon icon="google" /> Continue with Google
 								</Button>
 							</div>
 						</Panel>
