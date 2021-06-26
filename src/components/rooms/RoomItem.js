@@ -1,5 +1,5 @@
 import React from "react";
-import Timeago from "timeago-react";
+import TimeAgo from "timeago-react";
 import ProfileAvatar from "../ProfileAvatar";
 
 const RoomItem = ({ room }) => {
@@ -8,7 +8,7 @@ const RoomItem = ({ room }) => {
 		<div>
 			<div className="d-flux justify-content-between align-items-center">
 				<h3 className="text-disappear">{name}</h3>
-				<Timeago
+				<TimeAgo
 					datetime={
 						lastMessage ? new Date(lastMessage.createdAt) : new Date(createdAt)
 					}
