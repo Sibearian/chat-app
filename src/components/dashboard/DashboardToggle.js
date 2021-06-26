@@ -1,7 +1,7 @@
 import React, { useCallback } from "react";
 import { Button, Icon, Drawer, Alert } from "rsuite";
 import { useModalState, useMediaQuery } from "../../misc/custom-hooks";
-import Dashboard from ".";
+import Dashboard from "./Index";
 import { auth } from "../../misc/firebase";
 
 const DashboardToggle = () => {
