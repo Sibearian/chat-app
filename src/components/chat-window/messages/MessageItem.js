@@ -1,6 +1,7 @@
 import React from "react";
 import TimeAgo from "timeago-react";
 
+import ProfileInfoBtnModal from "./ProfileInfoBtnModal";
 import ProfileAvatar from "../../ProfileAvatar";
 
 const MessageItem = ({ message }) => {
@@ -15,10 +16,14 @@ const MessageItem = ({ message }) => {
 					className="ml-1"
 					size="xs"
 				/>
-				<span>{author.name}</span>
-				<TimeAgo datetime={createdAt} className="font-normal text-black-45" />
+				<ProfileInfoBtnModal
+					profile={author}
+					appearance="link"
+					className="p-0 ml-1 text-black"
+				/>
+				<TimeAgo datetime={createdAt} className="font-normal text-black-45 ml-2" />
 			</div>
-			<div>
+			<div> 
 				<span className="word-breal-all">{text}</span>
 			</div>
 		</li>
