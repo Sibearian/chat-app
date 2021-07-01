@@ -1,149 +1,169 @@
 /* eslint-disable consistent-return */
-import React, { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'react-router';
-import { Alert } from 'rsuite';
-import { database, auth, storage } from '../../../misc/firebase';
-import { transformToArrWithId } from '../../../misc/helpers';
-import MessageItem from './MessageItem';
+import React, { useState, useEffect, useCallback } from "react";
+import { useParams } from "react-router";
+import { Alert } from "rsuite";
+import { database, auth, storage } from "../../../misc/firebase";
+import { groupBy, transformToArrWithId } from "../../../misc/helpers";
+import MessageItem from "./MessageItem";
 
 const Messages = () => {
-  const { chatId } = useParams();
-  const [messages, setMessages] = useState(null);
+	const { chatId } = useParams();
+	const [messages, setMessages] = useState(null);
 
-  const isChatEmpty = messages && messages.length === 0;
-  const canShowMessages = messages && messages.length > 0;
+	const isChatEmpty = messages && messages.length === 0;
+	const canShowMessages = messages && messages.length > 0;
 
-  useEffect(() => {
-    const messagesRef = database.ref('/messages');
+	useEffect(() => {
+		const messagesRef = database.ref("/messages");
 
-    messagesRef
-      .orderByChild('roomId')
-      .equalTo(chatId)
-      .on('value', snap => {
-        const data = transformToArrWithId(snap.val());
+		messagesRef
+			.orderByChild("roomId")
+			.equalTo(chatId)
+			.on("value", (snap) => {
+				const data = transformToArrWithId(snap.val());
 
-        setMessages(data);
-      });
+				setMessages(data);
+			});
 
-    return () => {
-      messagesRef.off('value');
-    };
-  }, [chatId]);
+		return () => {
+			messagesRef.off("value");
+		};
+	}, [chatId]);
 
-  const handleAdmin = useCallback(
-    async uid => {
-      const adminsRef = database.ref(`/rooms/${chatId}/admins`);
+	const handleAdmin = useCallback(
+		async (uid) => {
+			const adminsRef = database.ref(`/rooms/${chatId}/admins`);
 
-      let alertMsg;
+			let alertMsg;
 
-      await adminsRef.transaction(admins => {
-        if (admins) {
-          if (admins[uid]) {
-            admins[uid] = null;
-            alertMsg = 'Admin permission removed';
-          } else {
-            admins[uid] = true;
-            alertMsg = 'Admin permission granted';
-          }
-        }
+			await adminsRef.transaction((admins) => {
+				if (admins) {
+					if (admins[uid]) {
+						admins[uid] = null;
+						alertMsg = "Admin permission removed";
+					} else {
+						admins[uid] = true;
+						alertMsg = "Admin permission granted";
+					}
+				}
 
-        return admins;
-      });
+				return admins;
+			});
 
-      Alert.info(alertMsg, 4000);
-    },
-    [chatId]
-  );
+			Alert.info(alertMsg, 4000);
+		},
+		[chatId]
+	);
 
-  const handleLike = useCallback(async msgId => {
-    const { uid } = auth.currentUser;
-    const messageRef = database.ref(`/messages/${msgId}`);
+	const handleLike = useCallback(async (msgId) => {
+		const { uid } = auth.currentUser;
+		const messageRef = database.ref(`/messages/${msgId}`);
 
-    let alertMsg;
+		let alertMsg;
 
-    await messageRef.transaction(msg => {
-      if (msg) {
-        if (msg.likes && msg.likes[uid]) {
-          msg.likeCount -= 1;
-          msg.likes[uid] = null;
-          alertMsg = 'Like removed';
-        } else {
-          msg.likeCount += 1;
+		await messageRef.transaction((msg) => {
+			if (msg) {
+				if (msg.likes && msg.likes[uid]) {
+					msg.likeCount -= 1;
+					msg.likes[uid] = null;
+					alertMsg = "Like removed";
+				} else {
+					msg.likeCount += 1;
 
-          if (!msg.likes) {
-            msg.likes = {};
-          }
+					if (!msg.likes) {
+						msg.likes = {};
+					}
 
-          msg.likes[uid] = true;
-          alertMsg = 'Like added';
-        }
-      }
+					msg.likes[uid] = true;
+					alertMsg = "Like added";
+				}
+			}
 
-      return msg;
-    });
+			return msg;
+		});
 
-    Alert.info(alertMsg, 4000);
-  }, []);
+		Alert.info(alertMsg, 4000);
+	}, []);
 
-  const handleDelete = useCallback(
-    async (msgId, file) => {
-      // eslint-disable-next-line no-alert
-      if (!window.confirm('Delete this message?')) {
-        return;
-      }
+	const handleDelete = useCallback(
+		async (msgId, file) => {
+			// eslint-disable-next-line no-alert
+			if (!window.confirm("Delete this message?")) {
+				return;
+			}
 
-      const isLast = messages[messages.length - 1].id === msgId;
+			const isLast = messages[messages.length - 1].id === msgId;
 
-      const updates = {};
+			const updates = {};
 
-      updates[`/messages/${msgId}`] = null;
+			updates[`/messages/${msgId}`] = null;
 
-      if (isLast && messages.length > 1) {
-        updates[`/rooms/${chatId}/lastMessage`] = {
-          ...messages[messages.length - 2],
-          msgId: messages[messages.length - 2].id,
-        };
-      }
+			if (isLast && messages.length > 1) {
+				updates[`/rooms/${chatId}/lastMessage`] = {
+					...messages[messages.length - 2],
+					msgId: messages[messages.length - 2].id,
+				};
+			}
 
-      if (isLast && messages.length === 1) {
-        updates[`/rooms/${chatId}/lastMessage`] = null;
-      }
+			if (isLast && messages.length === 1) {
+				updates[`/rooms/${chatId}/lastMessage`] = null;
+			}
 
-      try {
-        await database.ref().update(updates);
+			try {
+				await database.ref().update(updates);
 
-        Alert.info('Message has been deleted');
-      } catch (err) {
-        return Alert.error(err.message);
-      }
+				Alert.info("Message has been deleted");
+			} catch (err) {
+				return Alert.error(err.message);
+			}
 
-      if (file) {
-        try {
-          const fileRef = storage.refFromURL(file.url);
-          await fileRef.delete();
-        } catch (err) {
-          Alert.error(err.message);
-        }
-      }
-    },
-    [chatId, messages]
-  );
+			if (file) {
+				try {
+					const fileRef = storage.refFromURL(file.url);
+					await fileRef.delete();
+				} catch (err) {
+					Alert.error(err.message);
+				}
+			}
+		},
+		[chatId, messages]
+	);
 
-  return (
-    <ul className="msg-list custom-scroll">
-      {isChatEmpty && <li>No messages yet</li>}
-      {canShowMessages &&
-        messages.map(msg => (
-          <MessageItem
-            key={msg.id}
-            message={msg}
-            handleAdmin={handleAdmin}
-            handleLike={handleLike}
-            handleDelete={handleDelete}
-          />
-        ))}
-    </ul>
-  );
+	const renderMessages = () => {
+		const groups = groupBy(messages, (item) =>
+			new Date(item.createdAt).toDateString()
+		);
+
+		const items = [];
+
+		Object.keys(groups).forEach((date) => {
+			items.push(
+				<li className="text-center mb-1 padded" key={date}>
+					{date}
+				</li>
+			);
+
+			const msgs = groups[date].map((msg) => (
+				<MessageItem
+					key={msg.id}
+					message={msg}
+					handleAdmin={handleAdmin}
+					handleLike={handleLike}
+					handleDelete={handleDelete}
+				/>
+			));
+			items.push(...msgs);
+		});
+
+		return items;
+	};
+
+	return (
+		<ul className="msg-list custom-scroll">
+			{isChatEmpty && <li>No messages yet</li>}
+			{canShowMessages && renderMessages()}
+		</ul>
+	);
 };
 
 export default Messages;
